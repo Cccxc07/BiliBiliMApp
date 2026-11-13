@@ -1,0 +1,12 @@
+name: macos-probe
+on:
+  workflow_dispatch:
+jobs:
+  a:
+    runs-on: macos-14
+    steps:
+      - run: sw_vers && xcodebuild -version
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - run: uname -a
