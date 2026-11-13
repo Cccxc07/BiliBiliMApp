@@ -1,6 +1,8 @@
-﻿name: Build dylib
+name: Build dylib
 
-# 浜戠鎶?dylib 缂栧嚭鏉ワ紝浜х墿鍦?Actions 鐨?Artifacts 閲屼笅杞斤紝鐩存帴涓㈢粰 TrollFools 娉ㄥ叆銆?on:
+# Build libBiliBiliMDDylib.dylib in the cloud, download it from Actions Artifacts,
+# then hand it to TrollFools / TrollStore injector.
+on:
   workflow_dispatch:
   push:
     branches: [ main ]
@@ -11,15 +13,17 @@
 
 jobs:
   build:
-    name: 缂栬瘧 libBiliBiliMDDylib.dylib
+    name: build libBiliBiliMDDylib.dylib
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
-      - name: 鏄剧ず Xcode 鐗堟湰
-        run: xcodebuild -version
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          sw_vers
 
-      - name: 瀹夎 MonkeyDev
+      - name: Install MonkeyDev
         run: |
           set -e
           git clone --depth 1 https://github.com/AloneMonkey/MonkeyDev.git /tmp/MonkeyDev
@@ -29,16 +33,19 @@ jobs:
           elif [ -f bin/install.sh ]; then
             sudo ./bin/install.sh
           else
-            echo "::warning::娌℃壘鍒?MonkeyDev 瀹夎鑴氭湰锛屾墜宸ラ摵涓€娆＄洰褰曠粨鏋?
+            echo "::warning::no install script found, laying out /opt/MonkeyDev manually"
             sudo mkdir -p /opt/MonkeyDev/Frameworks /opt/MonkeyDev/include /opt/MonkeyDev/Librarys
-            sudo cp -R /tmp/MonkeyDev/Frameworks/* /opt/MonkeyDev/Frameworks/ 2>/dev/null || true
+            sudo cp -R /tmp/MonkeyDev/Frameworks/. /opt/MonkeyDev/Frameworks/ 2>/dev/null || true
+            sudo cp -R /tmp/MonkeyDev/include/. /opt/MonkeyDev/include/ 2>/dev/null || true
+            sudo cp -R /tmp/MonkeyDev/Librarys/. /opt/MonkeyDev/Librarys/ 2>/dev/null || true
           fi
-          ls -la /opt/MonkeyDev || true
+          ls -la /opt/MonkeyDev
+          ls /opt/MonkeyDev/Frameworks | head -30
 
-      - name: 绠＄嚎鑷
+      - name: Pipeline audit
         run: node tools/audit-logos-pipeline.js
 
-      - name: 缂栬瘧 dylib
+      - name: Build dylib
         run: |
           set -e
           xcodebuild \
@@ -54,12 +61,12 @@ jobs:
             MonkeyDevTheosPath=/opt/theos \
             build
 
-      - name: 鏀堕泦浜х墿
+      - name: Collect artifact
         run: |
           set -e
           DYLIB="$(find build -name 'libBiliBiliMDDylib.dylib' -print -quit)"
           if [ -z "$DYLIB" ]; then
-            echo "::error::娌℃湁鎵惧埌 libBiliBiliMDDylib.dylib"
+            echo "::error::libBiliBiliMDDylib.dylib not found"
             find build -maxdepth 3 -type d | head -50
             exit 1
           fi
