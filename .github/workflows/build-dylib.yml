@@ -34,16 +34,21 @@ jobs:
           sudo cp -R /tmp/MonkeyDev/bin/. /opt/MonkeyDev/bin/ || true
           sudo cp -R /tmp/MonkeyDev/Tools/. /opt/MonkeyDev/Tools/ || true
           echo "--- include ---"
-          ls -R /opt/MonkeyDev/include | head -20
+          ls /opt/MonkeyDev/include
 
-      - name: Prepare MonkeyDev / Theos shims
-        # 1) theos Prefix.pch is hard-imported by BiliBiliMDDylib-Prefix.pch
-        # 2) two files still import the legacy <objc/objc-runtime.h>
-        # 3) BiliBiliMDDylib.m imports <Cycript/Cycript.h> unconditionally
-        # 4) the repo compiles pre-generated .mm, so MonkeyDev's `md --xcbp-logos` is a no-op
+      - name: Prepare SDK shims
+        # The author's Mac had a few headers that a clean runner lacks.
+        #   /opt/theos/Prefix.pch            hard-imported by BiliBiliMDDylib-Prefix.pch
+        #   objc/objc-runtime.h              legacy path, gone from modern SDKs
+        #   Cycript/Cycript.h                only used in DEBUG
+        #   CydiaSubstrate/CydiaSubstrate.h  umbrella header, substrate.h is enough
+        #   rootless.h                       only ROOT_PATH_NS(), identity off-jailbreak
+        #   /opt/MonkeyDev/bin/md            Logos preprocessor; repo ships pre-expanded .mm
         run: |
           set -e
-          sudo mkdir -p /opt/theos /opt/theos/include/objc /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript
+          sudo mkdir -p /opt/theos /opt/theos/include/objc \
+                        /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript \
+                        /opt/MonkeyDev/include/CydiaSubstrate /opt/MonkeyDev/bin
 
           printf '#ifndef THEOS_PREFIX_PCH\n#define THEOS_PREFIX_PCH\n#import <Foundation/Foundation.h>\n#import <UIKit/UIKit.h>\n#endif\n' | sudo tee /opt/theos/Prefix.pch >/dev/null
 
@@ -52,11 +57,15 @@ jobs:
 
           printf '#pragma once\n#ifdef __cplusplus\nextern "C" {\n#endif\nvoid CYListenServer(int port);\n#ifdef __cplusplus\n}\n#endif\n' | sudo tee /opt/MonkeyDev/include/Cycript/Cycript.h >/dev/null
 
+          printf '#pragma once\n#include <substrate.h>\n' | sudo tee /opt/MonkeyDev/include/CydiaSubstrate/CydiaSubstrate.h >/dev/null
+
+          printf '#pragma once\n#import <Foundation/Foundation.h>\n#define ROOT_PATH_NS(p) (p)\n#define ROOT_PATH_C(p) (p)\n' | sudo tee /opt/MonkeyDev/include/rootless.h >/dev/null
+
           printf '#!/bin/sh\nexit 0\n' | sudo tee /opt/MonkeyDev/bin/md >/dev/null
           sudo chmod +x /opt/MonkeyDev/bin/md
 
-          echo "--- shims ready ---"
-          ls -la /opt/MonkeyDev/include /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript /opt/theos
+          echo "--- shims ---"
+          ls /opt/MonkeyDev/include /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript /opt/MonkeyDev/include/CydiaSubstrate /opt/theos
 
       - name: Pipeline audit
         run: node tools/audit-logos-pipeline.js
@@ -75,6 +84,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             MonkeyDevPath=/opt/MonkeyDev \
             MonkeyDevTheosPath=/opt/theos \
+            "HEADER_SEARCH_PATHS=/opt/MonkeyDev/include /opt/theos/include /opt/theos/vendor/include \$(SRCROOT)/BiliBiliMDDylib/Config \$(SRCROOT)/BiliBiliMDDylib/Logos/Tool/SSZipArchive \$(SRCROOT)/BiliBiliMDDylib/Logos/Tool/YYCache \$(SRCROOT)/BiliBiliMDDylib/Logos/Tool/Masonry" \
             OTHER_LDFLAGS='-undefined dynamic_lookup' \
             build
 
