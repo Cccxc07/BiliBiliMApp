@@ -19,7 +19,7 @@ on:
 jobs:
   build:
     name: build libBiliBiliMDDylib.dylib
-    runs-on: macos-15
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
 
