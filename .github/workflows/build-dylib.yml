@@ -64,8 +64,16 @@ jobs:
           printf '#!/bin/sh\nexit 0\n' | sudo tee /opt/MonkeyDev/bin/md >/dev/null
           sudo chmod +x /opt/MonkeyDev/bin/md
 
+          # The project links libroot.a from /opt/theos/vendor/lib (author's machine).
+          # Nothing here needs its symbols, so an empty archive satisfies the linker.
+          sudo mkdir -p /opt/theos/vendor/lib
+          if [ ! -f /opt/theos/vendor/lib/libroot.a ]; then
+            ( cd /tmp && ar rcs libroot.a )
+            sudo cp /tmp/libroot.a /opt/theos/vendor/lib/libroot.a
+          fi
+
           echo "--- shims ---"
-          ls /opt/MonkeyDev/include /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript /opt/MonkeyDev/include/CydiaSubstrate /opt/theos
+          ls /opt/MonkeyDev/include /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript /opt/MonkeyDev/include/CydiaSubstrate /opt/theos /opt/theos/vendor/lib
 
       - name: Pipeline audit
         run: node tools/audit-logos-pipeline.js
