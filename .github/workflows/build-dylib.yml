@@ -58,6 +58,16 @@ jobs:
           fi
           ls -la /opt/MonkeyDev/bin
 
+      - name: Provide theos prefix header
+        # BiliBiliMDDylib-Prefix.pch hard-imports /opt/theos/Prefix.pch
+        run: |
+          sudo mkdir -p /opt/theos
+          if [ ! -f /opt/theos/Prefix.pch ]; then
+            printf '#ifndef THEOS_PREFIX_PCH\n#define THEOS_PREFIX_PCH\n#import <Foundation/Foundation.h>\n#import <UIKit/UIKit.h>\n#endif\n' | sudo tee /opt/theos/Prefix.pch >/dev/null
+            echo "wrote /opt/theos/Prefix.pch"
+          fi
+          cat /opt/theos/Prefix.pch
+
       - name: Pipeline audit
         run: node tools/audit-logos-pipeline.js
 
