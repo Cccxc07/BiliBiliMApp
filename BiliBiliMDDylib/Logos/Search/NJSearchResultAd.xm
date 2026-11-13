@@ -53,6 +53,12 @@
         filterSet = [NSSet setWithArray:types];
         objc_setAssociatedObject(self, @selector(nj_filterCardTypes), filterSet, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
+    // 「搜索结果-相关搜索」开关：关闭后保留相关搜索，广告仍然过滤
+    if (!NJ_SEARCH_RELATED_VALUE) {
+        NSMutableSet *mutableFilterSet = [filterSet mutableCopy];
+        [mutableFilterSet removeObject:@"related_search"];
+        filterSet = [mutableFilterSet copy];
+    }
     return filterSet;
 }
 

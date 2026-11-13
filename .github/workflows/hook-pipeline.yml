@@ -1,0 +1,29 @@
+name: Hook pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: .xm / .mm 一致性审计
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 审计 Logos 管线
+        run: node tools/audit-logos-pipeline.js
+
+      - name: 上传审计报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: tools/audit-report.json
+          if-no-files-found: ignore

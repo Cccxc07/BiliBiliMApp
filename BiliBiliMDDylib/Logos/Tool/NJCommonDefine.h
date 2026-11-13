@@ -81,6 +81,24 @@ NS_ASSUME_NONNULL_BEGIN
 #define NJ_VERTICAL_SCREEN_MODE_VALUE ([NJ_SETTING_CACHE containsObjectForKey:NJ_VERTICAL_SCREEN_MODE_KEY] && \
 [(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_VERTICAL_SCREEN_MODE_KEY] boolValue])
 
+/// 首页搜索框-热词（默认开启=清空热词，关闭后保留B站轮换的热搜词）
+#define NJ_HOME_SEARCH_HOT_WORD_KEY @"NJ_HOME_SEARCH_HOT_WORD_KEY"
+/// 首页搜索框-热词的值
+#define NJ_HOME_SEARCH_HOT_WORD_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_HOME_SEARCH_HOT_WORD_KEY] || \
+[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_HOME_SEARCH_HOT_WORD_KEY] boolValue])
+
+/// 搜索结果-相关搜索（默认开启=去掉相关搜索，广告始终过滤）
+#define NJ_SEARCH_RELATED_KEY @"NJ_SEARCH_RELATED_KEY"
+/// 搜索结果-相关搜索的值
+#define NJ_SEARCH_RELATED_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_SEARCH_RELATED_KEY] || \
+[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_SEARCH_RELATED_KEY] boolValue])
+
+/// 直播间-保留观看人数/醒目留言（默认开启 = 不屏蔽这两类内容；关闭后恢复作者原版的激进屏蔽）
+#define NJ_LIVE_KEEP_AUDIENCE_KEY @"NJ_LIVE_KEEP_AUDIENCE_KEY"
+/// 直播间-保留观看人数/醒目留言的值
+#define NJ_LIVE_KEEP_AUDIENCE_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_LIVE_KEEP_AUDIENCE_KEY] || \
+[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_LIVE_KEEP_AUDIENCE_KEY] boolValue])
+
 /// --------------------- 设置页面 ---------------------
 
 /// --------------------- 单例 ---------------------

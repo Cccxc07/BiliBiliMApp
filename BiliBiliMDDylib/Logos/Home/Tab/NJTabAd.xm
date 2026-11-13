@@ -29,7 +29,8 @@
 %end
 
 %ctor {
-    if (NJ_MASTER_SWITCH_VALUE) {
+    // 总开关 + 「首页搜索框-热词」细分开关
+    if (NJ_MASTER_SWITCH_VALUE && NJ_HOME_SEARCH_HOT_WORD_VALUE) {
         %init(App);
     }
 }

@@ -1,0 +1,76 @@
+name: Build dylib
+
+# 云端把 dylib 编出来，产物在 Actions 的 Artifacts 里下载，直接丢给 TrollFools 注入。
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'BiliBiliMDDylib/**'
+      - 'BiliBiliMD.xcodeproj/**'
+      - '.github/workflows/build-dylib.yml'
+
+jobs:
+  build:
+    name: 编译 libBiliBiliMDDylib.dylib
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 显示 Xcode 版本
+        run: xcodebuild -version
+
+      - name: 安装 MonkeyDev
+        run: |
+          set -e
+          git clone --depth 1 https://github.com/AloneMonkey/MonkeyDev.git /tmp/MonkeyDev
+          cd /tmp/MonkeyDev
+          if [ -f install.sh ]; then
+            sudo ./install.sh
+          elif [ -f bin/install.sh ]; then
+            sudo ./bin/install.sh
+          else
+            echo "::warning::没找到 MonkeyDev 安装脚本，手工铺一次目录结构"
+            sudo mkdir -p /opt/MonkeyDev/Frameworks /opt/MonkeyDev/include /opt/MonkeyDev/Librarys
+            sudo cp -R /tmp/MonkeyDev/Frameworks/* /opt/MonkeyDev/Frameworks/ 2>/dev/null || true
+          fi
+          ls -la /opt/MonkeyDev || true
+
+      - name: 管线自检
+        run: node tools/audit-logos-pipeline.js
+
+      - name: 编译 dylib
+        run: |
+          set -e
+          xcodebuild \
+            -project BiliBiliMD.xcodeproj \
+            -target BiliBiliMDDylib \
+            -configuration Release \
+            -sdk iphoneos \
+            ARCHS=arm64 \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            MonkeyDevPath=/opt/MonkeyDev \
+            MonkeyDevTheosPath=/opt/theos \
+            build
+
+      - name: 收集产物
+        run: |
+          set -e
+          DYLIB="$(find build -name 'libBiliBiliMDDylib.dylib' -print -quit)"
+          if [ -z "$DYLIB" ]; then
+            echo "::error::没有找到 libBiliBiliMDDylib.dylib"
+            find build -maxdepth 3 -type d | head -50
+            exit 1
+          fi
+          mkdir -p out
+          cp "$DYLIB" out/
+          lipo -info out/libBiliBiliMDDylib.dylib
+          du -h out/libBiliBiliMDDylib.dylib
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libBiliBiliMDDylib
+          path: out/libBiliBiliMDDylib.dylib
+          if-no-files-found: error

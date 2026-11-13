@@ -47,6 +47,18 @@
                                                            cellId:NJ_SWITCH_CELL_ID
                                                             title:@"竖屏模式"
                                                                   on:NJ_VERTICAL_SCREEN_MODE_VALUE saveKey:NJ_VERTICAL_SCREEN_MODE_KEY]];
+    [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_HOME_SEARCH_HOT_WORD_BIZ_ID
+                                                           cellId:NJ_SWITCH_CELL_ID
+                                                            title:@"首页搜索框-热词"
+                                                                  on:NJ_HOME_SEARCH_HOT_WORD_VALUE saveKey:NJ_HOME_SEARCH_HOT_WORD_KEY]];
+    [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_SEARCH_RELATED_BIZ_ID
+                                                           cellId:NJ_SWITCH_CELL_ID
+                                                            title:@"搜索结果-相关搜索"
+                                                                  on:NJ_SEARCH_RELATED_VALUE saveKey:NJ_SEARCH_RELATED_KEY]];
+    [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_LIVE_KEEP_AUDIENCE_BIZ_ID
+                                                           cellId:NJ_SWITCH_CELL_ID
+                                                            title:@"直播间-保留观看人数/醒目留言"
+                                                                  on:NJ_LIVE_KEEP_AUDIENCE_VALUE saveKey:NJ_LIVE_KEEP_AUDIENCE_KEY]];
     [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_SHARE_DATA_BIZ_ID
                                                              cellId:NJ_COMMON_CELL_ID
                                                               title:@"分享数据"]];

@@ -78,12 +78,19 @@ static BBLiveBaseAppointmentCardView* _logos_method$App$BBLiveBaseAppointmentCar
 static void _logos_method$App$BBLivePoliticalFullScreenTopBar$layoutSubviews(_LOGOS_SELF_TYPE_NORMAL BBLivePoliticalFullScreenTopBar* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
     _logos_orig$App$BBLivePoliticalFullScreenTopBar$layoutSubviews(self, _cmd);
     
+    // 保留观看人数/人气：不摘除用户排名列表入口
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return;
+    }
     [self.userRankListEntryView removeFromSuperview];
     self.userRankListEntryView = nil;
 }
 
 static void _logos_method$App$BBLivePoliticalFullScreenTopBar$_updateUserRankListEntryViewIfNeed(_LOGOS_SELF_TYPE_NORMAL BBLivePoliticalFullScreenTopBar* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
-    
+    // 保留观看人数/人气：走原实现
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        _logos_orig$App$BBLivePoliticalFullScreenTopBar$_updateUserRankListEntryViewIfNeed(self, _cmd);
+    }
 }
 
 
@@ -101,12 +108,19 @@ static void _logos_method$App$BBLivePoliticalFullScreenTopBar$_updateUserRankLis
 static void _logos_method$App$BBLiveVerticalTopBar$layoutSubviews(_LOGOS_SELF_TYPE_NORMAL BBLiveVerticalTopBar* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
     _logos_orig$App$BBLiveVerticalTopBar$layoutSubviews(self, _cmd);
     
+    // 保留观看人数/人气：不摘除用户排名列表入口
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return;
+    }
     [self.userRankListEntryView removeFromSuperview];
     self.userRankListEntryView = nil;
 }
 
 static void _logos_method$App$BBLiveVerticalTopBar$_updateUserRankListEntryViewIfNeed(_LOGOS_SELF_TYPE_NORMAL BBLiveVerticalTopBar* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
-    
+    // 保留观看人数/人气：走原实现
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        _logos_orig$App$BBLiveVerticalTopBar$_updateUserRankListEntryViewIfNeed(self, _cmd);
+    }
 }
 
 
@@ -115,6 +129,9 @@ static void _logos_method$App$BBLiveVerticalTopBar$_updateUserRankListEntryViewI
 
 
 static BBLiveBasePopularHotRankEntryView* _logos_method$App$BBLiveBasePopularHotRankEntryView$initWithFrame$(_LOGOS_SELF_TYPE_INIT BBLiveBasePopularHotRankEntryView* __unused self, SEL __unused _cmd, CGRect frame) _LOGOS_RETURN_RETAINED {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$BBLiveBasePopularHotRankEntryView$initWithFrame$(self, _cmd, frame);
+    }
     return nil;
 }
 
@@ -125,6 +142,9 @@ static BBLiveBasePopularHotRankEntryView* _logos_method$App$BBLiveBasePopularHot
 
 
 static BBLiveBasePopularRankEntryView* _logos_method$App$BBLiveBasePopularRankEntryView$initWithFrame$(_LOGOS_SELF_TYPE_INIT BBLiveBasePopularRankEntryView* __unused self, SEL __unused _cmd, CGRect frame) _LOGOS_RETURN_RETAINED {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$BBLiveBasePopularRankEntryView$initWithFrame$(self, _cmd, frame);
+    }
     return nil;
 }
 
@@ -133,6 +153,9 @@ static BBLiveBasePopularRankEntryView* _logos_method$App$BBLiveBasePopularRankEn
 
 
 static id _logos_method$App$BBLiveVerticalPanelViewController$popularRankEntryViews(_LOGOS_SELF_TYPE_NORMAL BBLiveVerticalPanelViewController* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$BBLiveVerticalPanelViewController$popularRankEntryViews(self, _cmd);
+    }
     return nil;
 }
 
@@ -178,6 +201,10 @@ static BBLiveChainView* _logos_method$App$BBLiveChainView$initWithFrame$(_LOGOS_
 
 
 static BBLiveFunctionCardTaskManager* _logos_method$App$BBLiveFunctionCardTaskManager$init(_LOGOS_SELF_TYPE_INIT BBLiveFunctionCardTaskManager* __unused self, SEL __unused _cmd) _LOGOS_RETURN_RETAINED {
+    // 醒目留言卡片同属该管理器，默认保留
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$BBLiveFunctionCardTaskManager$init(self, _cmd);
+    }
     return nil;
 }
 
@@ -251,22 +278,37 @@ static void _logos_method$App$BBLiveFullScreenFloatPanelView$registerComponent$(
 
 
 static LynxView* _logos_method$App$LynxView$initWithCoder$(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd, id coder) _LOGOS_RETURN_RETAINED {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$LynxView$initWithCoder$(self, _cmd, coder);
+    }
     return nil;
 }
 
 static LynxView* _logos_method$App$LynxView$init(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd) _LOGOS_RETURN_RETAINED {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$LynxView$init(self, _cmd);
+    }
     return nil;
 }
 
 static LynxView* _logos_method$App$LynxView$initWithFrame$(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd, CGRect frame) _LOGOS_RETURN_RETAINED {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$LynxView$initWithFrame$(self, _cmd, frame);
+    }
     return nil;
 }
 
 static LynxView* _logos_method$App$LynxView$initWithBuilderBlock$(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd, id block) _LOGOS_RETURN_RETAINED {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$LynxView$initWithBuilderBlock$(self, _cmd, block);
+    }
     return nil;
 }
 
 static LynxView* _logos_method$App$LynxView$initWithoutRender(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd) _LOGOS_RETURN_RETAINED {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$LynxView$initWithoutRender(self, _cmd);
+    }
     return nil;
 }
 
@@ -276,10 +318,18 @@ static LynxView* _logos_method$App$LynxView$initWithoutRender(_LOGOS_SELF_TYPE_I
 
 
 static BBLChronFunctionCard* _logos_method$App$BBLChronFunctionCard$initWithStore$(_LOGOS_SELF_TYPE_INIT BBLChronFunctionCard* __unused self, SEL __unused _cmd, id store) _LOGOS_RETURN_RETAINED {
+    // 醒目留言卡片，默认保留
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$BBLChronFunctionCard$initWithStore$(self, _cmd, store);
+    }
     return nil;
 }
 
 static BBLChronFunctionCard* _logos_method$App$BBLChronFunctionCard$init(_LOGOS_SELF_TYPE_INIT BBLChronFunctionCard* __unused self, SEL __unused _cmd) _LOGOS_RETURN_RETAINED {
+    // 醒目留言卡片，默认保留
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return _logos_orig$App$BBLChronFunctionCard$init(self, _cmd);
+    }
     return nil;
 }
 

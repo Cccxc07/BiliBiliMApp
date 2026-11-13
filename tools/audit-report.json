@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-11-13T04:24:41.589Z",
+  "counts": {
+    "xm": 17,
+    "x": 1,
+    "mm": 19
+  },
+  "findings": {
+    "missingGenerated": [],
+    "staleGenerates": [],
+    "aheadGenerates": [],
+    "notInPbxproj": [],
+    "missingImports": [],
+    "conditionalImports": [
+      {
+        "file": "BiliBiliMDDylib\\Config\\MDMethodTrace.m",
+        "import": "CocoaLumberjack.h"
+      }
+    ]
+  }
+}

@@ -57,7 +57,8 @@ static BAPIAppInterfaceV1DefaultWordsReply* _logos_method$App$BAPIAppInterfaceV1
 
 
 static __attribute__((constructor)) void _logosLocalCtor_5c1794ff(int __unused argc, char __unused **argv, char __unused **envp) {
-    if (NJ_MASTER_SWITCH_VALUE) {
+    // 总开关 + 「首页搜索框-热词」细分开关
+    if (NJ_MASTER_SWITCH_VALUE && NJ_HOME_SEARCH_HOT_WORD_VALUE) {
         {Class _logos_class$App$BAPIAppInterfaceV1DefaultWordsReply = objc_getClass("BAPIAppInterfaceV1DefaultWordsReply"); { MSHookMessageEx(_logos_class$App$BAPIAppInterfaceV1DefaultWordsReply, @selector(initWithData:extensionRegistry:error:), (IMP)&_logos_method$App$BAPIAppInterfaceV1DefaultWordsReply$initWithData$extensionRegistry$error$, (IMP*)&_logos_orig$App$BAPIAppInterfaceV1DefaultWordsReply$initWithData$extensionRegistry$error$);}}
     }
 }

@@ -35,6 +35,12 @@
 #define NJ_AUTO_RECEIVE_COUPON_BIZ_ID @"autoReceiveCoupon"
 // 竖屏模式
 #define NJ_VERTICAL_SCREEN_MODE_BIZ_ID @"verticalScreenMode"
+// 首页搜索框-热词
+#define NJ_HOME_SEARCH_HOT_WORD_BIZ_ID @"homeSearchHotWord"
+// 搜索结果-相关搜索
+#define NJ_SEARCH_RELATED_BIZ_ID @"searchRelated"
+// 直播间-保留观看人数/醒目留言
+#define NJ_LIVE_KEEP_AUDIENCE_BIZ_ID @"liveKeepAudience"
 // 分享数据
 #define NJ_SHARE_DATA_BIZ_ID @"shareData"
 // 版本

@@ -49,13 +49,20 @@
 
 - (void)layoutSubviews {
     %orig;
+    // 保留观看人数/人气：不摘除用户排名列表入口
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return;
+    }
     // 用户排名列表
     [self.userRankListEntryView removeFromSuperview];
     self.userRankListEntryView = nil;
 }
 
 - (void)_updateUserRankListEntryViewIfNeed {
-    
+    // 保留观看人数/人气：走原实现
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        %orig;
+    }
 }
 
 %end
@@ -72,31 +79,44 @@
 
 - (void)layoutSubviews {
     %orig;
+    // 保留观看人数/人气：不摘除用户排名列表入口
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return;
+    }
     // 用户排名列表
     [self.userRankListEntryView removeFromSuperview];
     self.userRankListEntryView = nil;
 }
 
 - (void)_updateUserRankListEntryViewIfNeed {
-    
+    // 保留观看人数/人气：走原实现
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        %orig;
+    }
 }
 
 %end
 
-// 人气榜
+// 人气榜（观看人数就挂在这里；受「直播间-保留观看人数/醒目留言」开关控制，默认保留）
 %hook BBLiveBasePopularHotRankEntryView
 
 - (id)initWithFrame:(CGRect)frame {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
 %end
 
 
-// 人气榜
+// 人气榜（观看人数就挂在这里；受「直播间-保留观看人数/醒目留言」开关控制，默认保留）
 %hook BBLiveBasePopularRankEntryView
 
 - (id)initWithFrame:(CGRect)frame {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
@@ -105,6 +125,9 @@
 %hook BBLiveVerticalPanelViewController
 
 - (id)popularRankEntryViews {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
@@ -146,10 +169,13 @@
 
 %end
 
-// 弹幕下面的功能卡，比如游戏赛程卡
+// 弹幕下面的功能卡，比如游戏赛程卡（醒目留言卡片同属该管理器，默认保留）
 %hook BBLiveFunctionCardTaskManager
 
 - (id)init {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
@@ -219,39 +245,60 @@
 
 %end
 
-// 热门榜、人气榜
+// 热门榜、人气榜容器（受「直播间-保留观看人数/醒目留言」开关控制，默认保留）
 %hook LynxView
 
 - (id)initWithCoder:(id)coder {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
 - (id)init {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
 - (id)initWithFrame:(CGRect)frame {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
 - (id)initWithBuilderBlock:(id)block {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
 - (id)initWithoutRender {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
 %end
 
-// 直播详情-弹幕底部的功能卡
+// 直播详情-弹幕底部的功能卡（醒目留言最可能落在这里，默认保留）
 %hook BBLChronFunctionCard
 
 - (id)initWithStore:(id)store {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 
 - (id)init {
+    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
+        return %orig;
+    }
     return nil;
 }
 

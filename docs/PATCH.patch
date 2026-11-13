@@ -1,0 +1,471 @@
+# 原始仓库 → 当前工作副本 的改动
+
+修改 9 个文件，新增 10 个文件。
+
+## 新增
+- .github/workflows/build-dylib.yml
+- .github/workflows/hook-pipeline.yml
+- BiliBiliMD/Scripts/build-dylib.command
+- docs/ARCHITECTURE.md
+- docs/BUILD.md
+- docs/CHANGES.md
+- docs/巨魔注入指南.md
+- tools/audit-logos-pipeline.js
+- tools/audit-report.json
+- tools/make-patch.js
+
+## 修改
+- BiliBiliMDDylib/Logos/Home/Live/NJLiveDetailAd.mm
+- BiliBiliMDDylib/Logos/Home/Live/NJLiveDetailAd.xm
+- BiliBiliMDDylib/Logos/Home/Tab/NJTabAd.mm
+- BiliBiliMDDylib/Logos/Home/Tab/NJTabAd.xm
+- BiliBiliMDDylib/Logos/Search/NJSearchResultAd.mm
+- BiliBiliMDDylib/Logos/Search/NJSearchResultAd.xm
+- BiliBiliMDDylib/Logos/Setting/NJSettingDefine.h
+- BiliBiliMDDylib/Logos/Setting/NJSettingInjectDataProvider.m
+- BiliBiliMDDylib/Logos/Tool/NJCommonDefine.h
+
+```diff
+--- a/BiliBiliMDDylib/Logos/Home/Live/NJLiveDetailAd.mm
++++ b/BiliBiliMDDylib/Logos/Home/Live/NJLiveDetailAd.mm
+@@ -81,13 +81,20 @@
++    // 保留观看人数/人气：不摘除用户排名列表入口
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return;
++    }
+     [self.userRankListEntryView removeFromSuperview];
+     self.userRankListEntryView = nil;
+ }
+ 
+ static void _logos_method$App$BBLivePoliticalFullScreenTopBar$_updateUserRankListEntryViewIfNeed(_LOGOS_SELF_TYPE_NORMAL BBLivePoliticalFullScreenTopBar* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
+-    
++    // 保留观看人数/人气：走原实现
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        _logos_orig$App$BBLivePoliticalFullScreenTopBar$_updateUserRankListEntryViewIfNeed(self, _cmd);
++    }
+ }
+ 
+ 
+ 
+ 
+ @interface BBLiveVerticalTopBar : UIView
+ 
+@@ -104,13 +111,20 @@
++    // 保留观看人数/人气：不摘除用户排名列表入口
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return;
++    }
+     [self.userRankListEntryView removeFromSuperview];
+     self.userRankListEntryView = nil;
+ }
+ 
+ static void _logos_method$App$BBLiveVerticalTopBar$_updateUserRankListEntryViewIfNeed(_LOGOS_SELF_TYPE_NORMAL BBLiveVerticalTopBar* _LOGOS_SELF_CONST __unused self, SEL __unused _cmd) {
+-    
++    // 保留观看人数/人气：走原实现
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        _logos_orig$App$BBLiveVerticalTopBar$_updateUserRankListEntryViewIfNeed(self, _cmd);
++    }
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+@@ -118,7 +132,10 @@
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$BBLiveBasePopularHotRankEntryView$initWithFrame$(self, _cmd, frame);
++    }
+     return nil;
+ }
+ 
+ 
+ 
+ 
+ 
+@@ -128,7 +145,10 @@
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$BBLiveBasePopularRankEntryView$initWithFrame$(self, _cmd, frame);
++    }
+     return nil;
+ }
+ 
+ 
+ 
+ 
+ 
+@@ -136,7 +156,10 @@
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$BBLiveVerticalPanelViewController$popularRankEntryViews(self, _cmd);
++    }
+     return nil;
+ }
+ 
+ 
+ 
+ 
+ 
+@@ -181,7 +204,11 @@
++    // 醒目留言卡片同属该管理器，默认保留
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$BBLiveFunctionCardTaskManager$init(self, _cmd);
++    }
+     return nil;
+ }
+ 
+ 
+ 
+ 
+ 
+@@ -254,23 +281,38 @@
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$LynxView$initWithCoder$(self, _cmd, coder);
++    }
+     return nil;
+ }
+ 
+ static LynxView* _logos_method$App$LynxView$init(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd) _LOGOS_RETURN_RETAINED {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$LynxView$init(self, _cmd);
++    }
+     return nil;
+ }
+ 
+ static LynxView* _logos_method$App$LynxView$initWithFrame$(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd, CGRect frame) _LOGOS_RETURN_RETAINED {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$LynxView$initWithFrame$(self, _cmd, frame);
++    }
+     return nil;
+ }
+ 
+ static LynxView* _logos_method$App$LynxView$initWithBuilderBlock$(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd, id block) _LOGOS_RETURN_RETAINED {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$LynxView$initWithBuilderBlock$(self, _cmd, block);
++    }
+     return nil;
+ }
+ 
+ static LynxView* _logos_method$App$LynxView$initWithoutRender(_LOGOS_SELF_TYPE_INIT LynxView* __unused self, SEL __unused _cmd) _LOGOS_RETURN_RETAINED {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$LynxView$initWithoutRender(self, _cmd);
++    }
+     return nil;
+ }
+ 
+ 
+ 
+ 
+ 
+@@ -279,11 +321,19 @@
++    // 醒目留言卡片，默认保留
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$BBLChronFunctionCard$initWithStore$(self, _cmd, store);
++    }
+     return nil;
+ }
+ 
+ static BBLChronFunctionCard* _logos_method$App$BBLChronFunctionCard$init(_LOGOS_SELF_TYPE_INIT BBLChronFunctionCard* __unused self, SEL __unused _cmd) _LOGOS_RETURN_RETAINED {
++    // 醒目留言卡片，默认保留
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return _logos_orig$App$BBLChronFunctionCard$init(self, _cmd);
++    }
+     return nil;
+ }
+ 
+ 
+ 
+ 
+ 
+
+--- a/BiliBiliMDDylib/Logos/Home/Live/NJLiveDetailAd.xm
++++ b/BiliBiliMDDylib/Logos/Home/Live/NJLiveDetailAd.xm
+@@ -52,14 +52,21 @@
++    // 保留观看人数/人气：不摘除用户排名列表入口
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return;
++    }
+     // 用户排名列表
+     [self.userRankListEntryView removeFromSuperview];
+     self.userRankListEntryView = nil;
+ }
+ 
+ - (void)_updateUserRankListEntryViewIfNeed {
+-    
++    // 保留观看人数/人气：走原实现
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        %orig;
++    }
+ }
+ 
+ %end
+ 
+ // 竖屏topBar
+ @interface BBLiveVerticalTopBar : UIView
+ 
+@@ -75,32 +82,45 @@
++    // 保留观看人数/人气：不摘除用户排名列表入口
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return;
++    }
+     // 用户排名列表
+     [self.userRankListEntryView removeFromSuperview];
+     self.userRankListEntryView = nil;
+ }
+ 
+ - (void)_updateUserRankListEntryViewIfNeed {
+-    
++    // 保留观看人数/人气：走原实现
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        %orig;
++    }
+ }
+ 
+ %end
+ 
+-// 人气榜
++// 人气榜（观看人数就挂在这里；受「直播间-保留观看人数/醒目留言」开关控制，默认保留）
+ %hook BBLiveBasePopularHotRankEntryView
+ 
+ - (id)initWithFrame:(CGRect)frame {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ %end
+ 
+ 
+-// 人气榜
++// 人气榜（观看人数就挂在这里；受「直播间-保留观看人数/醒目留言」开关控制，默认保留）
+ %hook BBLiveBasePopularRankEntryView
+ 
+ - (id)initWithFrame:(CGRect)frame {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ %end
+ 
+ %hook BBLiveVerticalPanelViewController
+ 
+@@ -108,7 +128,10 @@
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ %end
+ 
+ // 分区排行，比如娱乐新人
+ %hook BBLiveBaseAreaRankEntryView
+@@ -149,11 +172,14 @@
+-// 弹幕下面的功能卡，比如游戏赛程卡
++// 弹幕下面的功能卡，比如游戏赛程卡（醒目留言卡片同属该管理器，默认保留）
+ %hook BBLiveFunctionCardTaskManager
+ 
+ - (id)init {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ %end
+ 
+ // 弹幕下面的购物说明卡，比如热门抢购卡
+ %hook BBLiveShoppingExplainCardViewModel
+@@ -222,40 +248,61 @@
+-// 热门榜、人气榜
++// 热门榜、人气榜容器（受「直播间-保留观看人数/醒目留言」开关控制，默认保留）
+ %hook LynxView
+ 
+ - (id)initWithCoder:(id)coder {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ - (id)init {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ - (id)initWithFrame:(CGRect)frame {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ - (id)initWithBuilderBlock:(id)block {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ - (id)initWithoutRender {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ %end
+ 
+-// 直播详情-弹幕底部的功能卡
++// 直播详情-弹幕底部的功能卡（醒目留言最可能落在这里，默认保留）
+ %hook BBLChronFunctionCard
+ 
+ - (id)initWithStore:(id)store {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ - (id)init {
++    if (NJ_LIVE_KEEP_AUDIENCE_VALUE) {
++        return %orig;
++    }
+     return nil;
+ }
+ 
+ %end
+ 
+ %end
+ 
+
+--- a/BiliBiliMDDylib/Logos/Home/Tab/NJTabAd.mm
++++ b/BiliBiliMDDylib/Logos/Home/Tab/NJTabAd.mm
+@@ -60,5 +60,6 @@
+-    if (NJ_MASTER_SWITCH_VALUE) {
++    // 总开关 + 「首页搜索框-热词」细分开关
++    if (NJ_MASTER_SWITCH_VALUE && NJ_HOME_SEARCH_HOT_WORD_VALUE) {
+         {Class _logos_class$App$BAPIAppInterfaceV1DefaultWordsReply = objc_getClass("BAPIAppInterfaceV1DefaultWordsReply"); { MSHookMessageEx(_logos_class$App$BAPIAppInterfaceV1DefaultWordsReply, @selector(initWithData:extensionRegistry:error:), (IMP)&_logos_method$App$BAPIAppInterfaceV1DefaultWordsReply$initWithData$extensionRegistry$error$, (IMP*)&_logos_orig$App$BAPIAppInterfaceV1DefaultWordsReply$initWithData$extensionRegistry$error$);}}
+     }
+ }
+ 
+
+--- a/BiliBiliMDDylib/Logos/Home/Tab/NJTabAd.xm
++++ b/BiliBiliMDDylib/Logos/Home/Tab/NJTabAd.xm
+@@ -32,5 +32,6 @@
+-    if (NJ_MASTER_SWITCH_VALUE) {
++    // 总开关 + 「首页搜索框-热词」细分开关
++    if (NJ_MASTER_SWITCH_VALUE && NJ_HOME_SEARCH_HOT_WORD_VALUE) {
+         %init(App);
+     }
+ }
+ 
+
+--- a/BiliBiliMDDylib/Logos/Search/NJSearchResultAd.mm
++++ b/BiliBiliMDDylib/Logos/Search/NJSearchResultAd.mm
+@@ -84,7 +84,13 @@
++    // 「搜索结果-相关搜索」开关：关闭后保留相关搜索，广告仍然过滤
++    if (!NJ_SEARCH_RELATED_VALUE) {
++        NSMutableSet *mutableFilterSet = [filterSet mutableCopy];
++        [mutableFilterSet removeObject:@"related_search"];
++        filterSet = [mutableFilterSet copy];
++    }
+     return filterSet;
+ }
+ 
+ 
+ 
+ 
+ 
+
+--- a/BiliBiliMDDylib/Logos/Search/NJSearchResultAd.xm
++++ b/BiliBiliMDDylib/Logos/Search/NJSearchResultAd.xm
+@@ -56,7 +56,13 @@
++    // 「搜索结果-相关搜索」开关：关闭后保留相关搜索，广告仍然过滤
++    if (!NJ_SEARCH_RELATED_VALUE) {
++        NSMutableSet *mutableFilterSet = [filterSet mutableCopy];
++        [mutableFilterSet removeObject:@"related_search"];
++        filterSet = [mutableFilterSet copy];
++    }
+     return filterSet;
+ }
+ 
+ %end
+ 
+ %end
+ 
+
+--- a/BiliBiliMDDylib/Logos/Setting/NJSettingDefine.h
++++ b/BiliBiliMDDylib/Logos/Setting/NJSettingDefine.h
+@@ -38,7 +38,13 @@
++// 首页搜索框-热词
++#define NJ_HOME_SEARCH_HOT_WORD_BIZ_ID @"homeSearchHotWord"
++// 搜索结果-相关搜索
++#define NJ_SEARCH_RELATED_BIZ_ID @"searchRelated"
++// 直播间-保留观看人数/醒目留言
++#define NJ_LIVE_KEEP_AUDIENCE_BIZ_ID @"liveKeepAudience"
+ // 分享数据
+ #define NJ_SHARE_DATA_BIZ_ID @"shareData"
+ // 版本
+ #define NJ_APP_VERSION_BIZ_ID @"appVersion"
+ // 官网
+ #define NJ_OFFICIAL_WEBSITE_BIZ_ID @"officialWebsite"
+ 
+
+--- a/BiliBiliMDDylib/Logos/Setting/NJSettingInjectDataProvider.m
++++ b/BiliBiliMDDylib/Logos/Setting/NJSettingInjectDataProvider.m
+@@ -50,7 +50,19 @@
++    [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_HOME_SEARCH_HOT_WORD_BIZ_ID
++                                                           cellId:NJ_SWITCH_CELL_ID
++                                                            title:@"首页搜索框-热词"
++                                                                  on:NJ_HOME_SEARCH_HOT_WORD_VALUE saveKey:NJ_HOME_SEARCH_HOT_WORD_KEY]];
++    [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_SEARCH_RELATED_BIZ_ID
++                                                           cellId:NJ_SWITCH_CELL_ID
++                                                            title:@"搜索结果-相关搜索"
++                                                                  on:NJ_SEARCH_RELATED_VALUE saveKey:NJ_SEARCH_RELATED_KEY]];
++    [datas addObject:[[NJSettingSwitchViewModel alloc] initWithBizId:NJ_LIVE_KEEP_AUDIENCE_BIZ_ID
++                                                           cellId:NJ_SWITCH_CELL_ID
++                                                            title:@"直播间-保留观看人数/醒目留言"
++                                                                  on:NJ_LIVE_KEEP_AUDIENCE_VALUE saveKey:NJ_LIVE_KEEP_AUDIENCE_KEY]];
+     [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_SHARE_DATA_BIZ_ID
+                                                              cellId:NJ_COMMON_CELL_ID
+                                                               title:@"分享数据"]];
+     [datas addObject:[self version]];
+     [datas addObject:[[NJSettingSkullViewModel alloc] initWithBizId:NJ_OFFICIAL_WEBSITE_BIZ_ID
+                                                              cellId:NJ_COMMON_CELL_ID
+                                                               title:@"官网"]];
+
+--- a/BiliBiliMDDylib/Logos/Tool/NJCommonDefine.h
++++ b/BiliBiliMDDylib/Logos/Tool/NJCommonDefine.h
+@@ -84,7 +84,25 @@
++/// 首页搜索框-热词（默认开启=清空热词，关闭后保留B站轮换的热搜词）
++#define NJ_HOME_SEARCH_HOT_WORD_KEY @"NJ_HOME_SEARCH_HOT_WORD_KEY"
++/// 首页搜索框-热词的值
++#define NJ_HOME_SEARCH_HOT_WORD_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_HOME_SEARCH_HOT_WORD_KEY] || \
++[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_HOME_SEARCH_HOT_WORD_KEY] boolValue])
++
++/// 搜索结果-相关搜索（默认开启=去掉相关搜索，广告始终过滤）
++#define NJ_SEARCH_RELATED_KEY @"NJ_SEARCH_RELATED_KEY"
++/// 搜索结果-相关搜索的值
++#define NJ_SEARCH_RELATED_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_SEARCH_RELATED_KEY] || \
++[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_SEARCH_RELATED_KEY] boolValue])
++
++/// 直播间-保留观看人数/醒目留言（默认开启 = 不屏蔽这两类内容；关闭后恢复作者原版的激进屏蔽）
++#define NJ_LIVE_KEEP_AUDIENCE_KEY @"NJ_LIVE_KEEP_AUDIENCE_KEY"
++/// 直播间-保留观看人数/醒目留言的值
++#define NJ_LIVE_KEEP_AUDIENCE_VALUE (![NJ_SETTING_CACHE containsObjectForKey:NJ_LIVE_KEEP_AUDIENCE_KEY] || \
++[(NSNumber *)[NJ_SETTING_CACHE objectForKey:NJ_LIVE_KEEP_AUDIENCE_KEY] boolValue])
++
+ /// --------------------- 设置页面 ---------------------
+ 
+ /// --------------------- 单例 ---------------------
+ 
+ // .h头文件中的单例宏
+ #define NJ_SINGLETON_H(name) \
+ + (instancetype)shared##name;
+
+```
