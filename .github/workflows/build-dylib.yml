@@ -27,46 +27,36 @@ jobs:
         run: |
           set -e
           git clone --depth 1 https://github.com/AloneMonkey/MonkeyDev.git /tmp/MonkeyDev
-          cd /tmp/MonkeyDev
-          if [ -f install.sh ]; then
-            sudo ./install.sh
-          elif [ -f bin/install.sh ]; then
-            sudo ./bin/install.sh
-          else
-            echo "::warning::no install script found, laying out /opt/MonkeyDev manually"
-            sudo mkdir -p /opt/MonkeyDev/Frameworks /opt/MonkeyDev/include /opt/MonkeyDev/Librarys
-            sudo cp -R /tmp/MonkeyDev/Frameworks/. /opt/MonkeyDev/Frameworks/ 2>/dev/null || true
-            sudo cp -R /tmp/MonkeyDev/include/. /opt/MonkeyDev/include/ 2>/dev/null || true
-            sudo cp -R /tmp/MonkeyDev/Librarys/. /opt/MonkeyDev/Librarys/ 2>/dev/null || true
-          fi
-          echo "--- /opt/MonkeyDev ---"
-          ls -la /opt/MonkeyDev || true
-          echo "--- bin ---"
-          ls -la /opt/MonkeyDev/bin || true
-          echo "--- Frameworks ---"
-          ls /opt/MonkeyDev/Frameworks || true
+          sudo mkdir -p /opt/MonkeyDev/Frameworks /opt/MonkeyDev/include /opt/MonkeyDev/Librarys /opt/MonkeyDev/bin /opt/MonkeyDev/Tools
+          sudo cp -R /tmp/MonkeyDev/include/. /opt/MonkeyDev/include/ || true
+          sudo cp -R /tmp/MonkeyDev/Librarys/. /opt/MonkeyDev/Librarys/ || true
+          sudo cp -R /tmp/MonkeyDev/Frameworks/. /opt/MonkeyDev/Frameworks/ || true
+          sudo cp -R /tmp/MonkeyDev/bin/. /opt/MonkeyDev/bin/ || true
+          sudo cp -R /tmp/MonkeyDev/Tools/. /opt/MonkeyDev/Tools/ || true
+          echo "--- include ---"
+          ls -R /opt/MonkeyDev/include | head -20
 
-      - name: Neutralize MonkeyDev md hook
-        # This repo compiles pre-generated Logos .mm files, so the md --xcbp-logos
-        # build phase is not needed. Ship a no-op stub when the binary is missing.
+      - name: Prepare MonkeyDev / Theos shims
+        # 1) theos Prefix.pch is hard-imported by BiliBiliMDDylib-Prefix.pch
+        # 2) two files still import the legacy <objc/objc-runtime.h>
+        # 3) BiliBiliMDDylib.m imports <Cycript/Cycript.h> unconditionally
+        # 4) the repo compiles pre-generated .mm, so MonkeyDev's `md --xcbp-logos` is a no-op
         run: |
-          sudo mkdir -p /opt/MonkeyDev/bin
-          if [ ! -x /opt/MonkeyDev/bin/md ]; then
-            printf '#!/bin/sh\nexit 0\n' | sudo tee /opt/MonkeyDev/bin/md >/dev/null
-            sudo chmod +x /opt/MonkeyDev/bin/md
-            echo "stubbed /opt/MonkeyDev/bin/md"
-          fi
-          ls -la /opt/MonkeyDev/bin
+          set -e
+          sudo mkdir -p /opt/theos /opt/theos/include/objc /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript
 
-      - name: Provide theos prefix header
-        # BiliBiliMDDylib-Prefix.pch hard-imports /opt/theos/Prefix.pch
-        run: |
-          sudo mkdir -p /opt/theos
-          if [ ! -f /opt/theos/Prefix.pch ]; then
-            printf '#ifndef THEOS_PREFIX_PCH\n#define THEOS_PREFIX_PCH\n#import <Foundation/Foundation.h>\n#import <UIKit/UIKit.h>\n#endif\n' | sudo tee /opt/theos/Prefix.pch >/dev/null
-            echo "wrote /opt/theos/Prefix.pch"
-          fi
-          cat /opt/theos/Prefix.pch
+          printf '#ifndef THEOS_PREFIX_PCH\n#define THEOS_PREFIX_PCH\n#import <Foundation/Foundation.h>\n#import <UIKit/UIKit.h>\n#endif\n' | sudo tee /opt/theos/Prefix.pch >/dev/null
+
+          printf '#pragma once\n#include <objc/runtime.h>\n' | sudo tee /opt/theos/include/objc/objc-runtime.h >/dev/null
+          sudo cp /opt/theos/include/objc/objc-runtime.h /opt/MonkeyDev/include/objc/objc-runtime.h
+
+          printf '#pragma once\n#ifdef __cplusplus\nextern "C" {\n#endif\nvoid CYListenServer(int port);\n#ifdef __cplusplus\n}\n#endif\n' | sudo tee /opt/MonkeyDev/include/Cycript/Cycript.h >/dev/null
+
+          printf '#!/bin/sh\nexit 0\n' | sudo tee /opt/MonkeyDev/bin/md >/dev/null
+          sudo chmod +x /opt/MonkeyDev/bin/md
+
+          echo "--- shims ready ---"
+          ls -la /opt/MonkeyDev/include /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript /opt/theos
 
       - name: Pipeline audit
         run: node tools/audit-logos-pipeline.js
@@ -85,6 +75,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             MonkeyDevPath=/opt/MonkeyDev \
             MonkeyDevTheosPath=/opt/theos \
+            OTHER_LDFLAGS='-undefined dynamic_lookup' \
             build
 
       - name: Collect artifact
@@ -99,6 +90,7 @@ jobs:
           mkdir -p out
           cp "$DYLIB" out/
           lipo -info out/libBiliBiliMDDylib.dylib
+          otool -L out/libBiliBiliMDDylib.dylib | head -20
           du -h out/libBiliBiliMDDylib.dylib
 
       - uses: actions/upload-artifact@v4
