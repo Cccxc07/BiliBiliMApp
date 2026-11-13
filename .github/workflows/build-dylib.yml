@@ -39,8 +39,24 @@ jobs:
             sudo cp -R /tmp/MonkeyDev/include/. /opt/MonkeyDev/include/ 2>/dev/null || true
             sudo cp -R /tmp/MonkeyDev/Librarys/. /opt/MonkeyDev/Librarys/ 2>/dev/null || true
           fi
-          ls -la /opt/MonkeyDev
-          ls /opt/MonkeyDev/Frameworks | head -30
+          echo "--- /opt/MonkeyDev ---"
+          ls -la /opt/MonkeyDev || true
+          echo "--- bin ---"
+          ls -la /opt/MonkeyDev/bin || true
+          echo "--- Frameworks ---"
+          ls /opt/MonkeyDev/Frameworks || true
+
+      - name: Neutralize MonkeyDev md hook
+        # This repo compiles pre-generated Logos .mm files, so the md --xcbp-logos
+        # build phase is not needed. Ship a no-op stub when the binary is missing.
+        run: |
+          sudo mkdir -p /opt/MonkeyDev/bin
+          if [ ! -x /opt/MonkeyDev/bin/md ]; then
+            printf '#!/bin/sh\nexit 0\n' | sudo tee /opt/MonkeyDev/bin/md >/dev/null
+            sudo chmod +x /opt/MonkeyDev/bin/md
+            echo "stubbed /opt/MonkeyDev/bin/md"
+          fi
+          ls -la /opt/MonkeyDev/bin
 
       - name: Pipeline audit
         run: node tools/audit-logos-pipeline.js
