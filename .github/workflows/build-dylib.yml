@@ -65,10 +65,12 @@ jobs:
           sudo chmod +x /opt/MonkeyDev/bin/md
 
           # The project links libroot.a from /opt/theos/vendor/lib (author's machine).
-          # Nothing here needs its symbols, so an empty archive satisfies the linker.
+          # Nothing here needs its symbols, so a one-symbol archive satisfies the linker.
           sudo mkdir -p /opt/theos/vendor/lib
           if [ ! -f /opt/theos/vendor/lib/libroot.a ]; then
-            ( cd /tmp && ar rcs libroot.a )
+            printf 'int nj_dummy_rootless_symbol = 0;\n' > /tmp/nj_dummy.c
+            xcrun --sdk iphoneos clang -arch arm64 -c /tmp/nj_dummy.c -o /tmp/nj_dummy.o
+            xcrun libtool -static -o /tmp/libroot.a /tmp/nj_dummy.o
             sudo cp /tmp/libroot.a /opt/theos/vendor/lib/libroot.a
           fi
 
