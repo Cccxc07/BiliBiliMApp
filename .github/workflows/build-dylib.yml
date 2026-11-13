@@ -2,6 +2,11 @@ name: Build dylib
 
 # Build libBiliBiliMDDylib.dylib in the cloud, download it from Actions Artifacts,
 # then hand it to TrollFools / TrollStore injector.
+#
+# IMPORTANT: `xcodebuild build` also emits libBiliBiliMDDylib.dylib.dSYM/Contents/Resources/DWARF/
+# libBiliBiliMDDylib.dylib — a debug-symbol file with the SAME basename but Mach-O filetype
+# MH_DSYM (10). It is not loadable and must never be shipped. The collect step below
+# excludes *.dSYM* and verifies the Mach-O filetype before uploading.
 on:
   workflow_dispatch:
   push:
@@ -37,13 +42,14 @@ jobs:
           ls /opt/MonkeyDev/include
 
       - name: Prepare SDK shims
-        # The author's Mac had a few headers that a clean runner lacks.
+        # The author's Mac had a few headers and libraries that a clean runner lacks.
         #   /opt/theos/Prefix.pch            hard-imported by BiliBiliMDDylib-Prefix.pch
         #   objc/objc-runtime.h              legacy path, gone from modern SDKs
         #   Cycript/Cycript.h                only used in DEBUG
         #   CydiaSubstrate/CydiaSubstrate.h  umbrella header, substrate.h is enough
         #   rootless.h                       only ROOT_PATH_NS(), identity off-jailbreak
         #   /opt/MonkeyDev/bin/md            Logos preprocessor; repo ships pre-expanded .mm
+        #   libsubstrate.dylib               hooking engine, shipped inside the app bundle
         run: |
           set -e
           sudo mkdir -p /opt/theos /opt/theos/include/objc \
@@ -74,8 +80,30 @@ jobs:
             sudo cp /tmp/libroot.a /opt/theos/vendor/lib/libroot.a
           fi
 
+          # Link-time stand-in for the hooking engine.
+          # The load command must carry the install name the device resolves, i.e.
+          #   @executable_path/Frameworks/libellekit.dylib   (ElleKit, substrate-compatible ABI)
+          # which is exactly what the shipped, working dylib references. The real library
+          # lives in the app bundle, so this stub only has to satisfy the linker.
+          cat > /tmp/nj_substrate_stub.c <<'STUBEOF'
+          /* Link-time only. Exports the substrate/ellekit ABI surface used by the tweak. */
+          typedef void *MSImageRef;
+          void MSHookMessageEx(void *cls, void *sel, void *imp, void **result) {}
+          void MSHookFunction(void *symbol, void *replace, void **result) {}
+          void MSHookMemory(void *target, const void *data, unsigned long size) {}
+          MSImageRef MSGetImageByName(const char *file) { return (MSImageRef)0; }
+          void *MSFindSymbol(MSImageRef image, const char *name) { return (void *)0; }
+          void CYListenServer(int port) {}
+          STUBEOF
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          xcrun clang -dynamiclib -arch arm64 -miphoneos-version-min=13.0 -isysroot "$SDK" \
+            -install_name @executable_path/Frameworks/libellekit.dylib \
+            -o /tmp/libellekit.dylib /tmp/nj_substrate_stub.c
+          sudo cp /tmp/libellekit.dylib /opt/MonkeyDev/Frameworks/libsubstrate.dylib
+          xcrun nm -gU /tmp/libellekit.dylib | head -20
+
           echo "--- shims ---"
-          ls /opt/MonkeyDev/include /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript /opt/MonkeyDev/include/CydiaSubstrate /opt/theos /opt/theos/vendor/lib
+          ls /opt/MonkeyDev/include /opt/MonkeyDev/include/objc /opt/MonkeyDev/include/Cycript /opt/MonkeyDev/include/CydiaSubstrate /opt/theos /opt/theos/vendor/lib /opt/MonkeyDev/Frameworks
 
       - name: Pipeline audit
         run: node tools/audit-logos-pipeline.js
@@ -92,26 +120,53 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
+            GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
+            DEBUG_INFORMATION_FORMAT=dwarf \
             MonkeyDevPath=/opt/MonkeyDev \
             MonkeyDevTheosPath=/opt/theos \
             "HEADER_SEARCH_PATHS=/opt/MonkeyDev/include /opt/theos/include /opt/theos/vendor/include \$(SRCROOT)/BiliBiliMDDylib/Config \$(SRCROOT)/BiliBiliMDDylib/Logos/Tool/SSZipArchive \$(SRCROOT)/BiliBiliMDDylib/Logos/Tool/YYCache \$(SRCROOT)/BiliBiliMDDylib/Logos/Tool/Masonry" \
-            OTHER_LDFLAGS='-undefined dynamic_lookup' \
+            OTHER_LDFLAGS='-undefined dynamic_lookup -weak_library /opt/MonkeyDev/Frameworks/libsubstrate.dylib' \
             build
 
-      - name: Collect artifact
+      - name: Collect and verify artifact
         run: |
           set -e
-          DYLIB="$(find build -name 'libBiliBiliMDDylib.dylib' -print -quit)"
+          # NOTE: never pick the file inside *.dSYM/* — it shares the basename but is MH_DSYM.
+          DYLIB="$(find build -type f -name 'libBiliBiliMDDylib.dylib' -not -path '*dSYM*' -print -quit)"
           if [ -z "$DYLIB" ]; then
             echo "::error::libBiliBiliMDDylib.dylib not found"
-            find build -maxdepth 3 -type d | head -50
+            find build -maxdepth 4 -type d | head -50
             exit 1
           fi
+          echo "picked: $DYLIB"
           mkdir -p out
           cp "$DYLIB" out/
+          chmod 755 out/libBiliBiliMDDylib.dylib
+
+          ls -lh out/libBiliBiliMDDylib.dylib
           lipo -info out/libBiliBiliMDDylib.dylib
-          otool -L out/libBiliBiliMDDylib.dylib | head -20
-          du -h out/libBiliBiliMDDylib.dylib
+          echo "--- mach header ---"
+          otool -hv out/libBiliBiliMDDylib.dylib
+          echo "--- install name ---"
+          otool -D out/libBiliBiliMDDylib.dylib
+          echo "--- dependencies ---"
+          otool -L out/libBiliBiliMDDylib.dylib
+
+          # Hard gate: filetype must be MH_DYLIB (6), never MH_DSYM (10).
+          if otool -hv out/libBiliBiliMDDylib.dylib | grep -qE '\bDSYM\b'; then
+            echo "::error::collected file is MH_DSYM (debug symbols), not a loadable dylib"
+            exit 1
+          fi
+          if ! otool -hv out/libBiliBiliMDDylib.dylib | grep -qE '\bDYLIB\b'; then
+            echo "::error::collected file is not MH_DYLIB"
+            exit 1
+          fi
+          # Parity with the shipped binary: the ElleKit load command must be present.
+          if ! otool -L out/libBiliBiliMDDylib.dylib | grep -q 'libellekit.dylib'; then
+            echo "::error::missing @executable_path/Frameworks/libellekit.dylib load command"
+            exit 1
+          fi
+          echo "OK: loadable arm64 dylib"
 
       - uses: actions/upload-artifact@v4
         with:
